@@ -20,24 +20,25 @@ import os
 import random
 
 
+"""iF YOU ARE OPENING OR RUNNNG THIS CODE AFTER A MONTH THIS CODE WILL NOT WORK BECAUSE WEBSITE WOULD HAVE UPDATE THERE TAGS"""
 
 
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 driver.maximize_window()
-# driver.get("https://www.google.com/")
+"""This part of the code will first go on google chrome search flipkart and then open flipkart and search mobile on it """
+driver.get("https://www.google.com/")
 
+search = driver.find_element(By.XPATH,("/html/body/div[1]/div[3]/form/div[1]/div[1]/div[1]/div/div[2]/textarea"))
+search.send_keys("flipkart")
+search.send_keys(Keys.ENTER)
+time.sleep(5)
 
-# search = driver.find_element(By.XPATH,("/html/body/div[1]/div[3]/form/div[1]/div[1]/div[1]/div/div[2]/textarea"))
-# search.send_keys("flipkart")
-# search.send_keys(Keys.ENTER)
-# time.sleep(5)
+link = driver.find_element(By.XPATH,("""/html/body/div[4]/div/div[12]/div[1]/div[2]/div[2]/div/div/div[1]/div/div/div/div/div/div/div/div[1]/div/span/a""")).click()
+time.sleep(2)
 
-# link = driver.find_element(By.XPATH,("""/html/body/div[4]/div/div[12]/div[1]/div[2]/div[2]/div/div/div[1]/div/div/div/div/div/div/div/div[1]/div/span/a""")).click()
-# time.sleep(2)
-
-# input=driver.find_element(By.XPATH,"""/html/body/div[1]/div/div[1]/div/div/div/div/div[1]/div/div[1]/div/div[1]/div[1]/header/div[1]/div[2]/form/div/div/input""")
-# input.send_keys("mobile")
-# input.send_keys(Keys.ENTER)
+input=driver.find_element(By.XPATH,"""/html/body/div[1]/div/div[1]/div/div/div/div/div[1]/div/div[1]/div/div[1]/div[1]/header/div[1]/div[2]/form/div/div/input""")
+input.send_keys("mobile")
+input.send_keys(Keys.ENTER)
 
 
 def download_image(img_url, folder_path, phone_name):
@@ -63,6 +64,7 @@ def scrap_image(images, phone_name):
 
     """Download images concurrently"""
     with concurrent.futures.ThreadPoolExecutor() as executor:
+        """calling download_image """
         futures = [executor.submit(download_image, img.get('src'), folder_path, phone_name) for img in images]
         for future in concurrent.futures.as_completed(futures):
             try:
@@ -73,6 +75,8 @@ def scrap_image(images, phone_name):
 all_data = pandas.DataFrame(columns=['Name', 'Higlights', 'Description','Image','Url'])
 def scrap_text_data():
     global all_data 
+    """pagination and data extraction function where using for loop we are changing the page number &page="+str(i) so that after 
+    every iterartion we can acces new page"""
     for i in range(1,3):
         url="https://www.flipkart.com/search?q=mobile&otracker=search&otracker1=search&marketplace=FLIPKART&as-show=on&as=off&page="+str(i)
 
@@ -90,13 +94,13 @@ def scrap_text_data():
         list_of_description = []
         list_of_url = []
         list_of_img = []
-
+        """Here Boxes contain all the box present on the page which we will access one by one using for loop"""
         for box in boxes:
             sub_link="https://www.flipkart.com"+str(box.get("href"))
             driver.get(sub_link)
 
             response = driver.page_source   
-    
+            """By this part of the code we are accessing data from the box"""
             soup = bs4.BeautifulSoup(response,'html.parser')    
             container = soup.find('div',class_="DOjaWF YJG4Cf")
             name = container.find('h1',class_="_6EBuvT")
@@ -106,7 +110,7 @@ def scrap_text_data():
             images = image_container.find_all('img') if image_container else []
             
             scrap_image(images,name.text)
-
+            """If data is True then store dat else if none then store Na"""
             try:
                 list_of_img.append(images)
             except AttributeError:
@@ -131,8 +135,8 @@ def scrap_text_data():
                 list_of_url.append(sub_link)
             except AttributeError:
                 list_of_url.append("Na")
-        print("page^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
-
+      
+        """storing data in Excel format"""
         page_data = pandas.DataFrame({
             'Name': list_of_names,
             'Higlights': list_of_higlights,
